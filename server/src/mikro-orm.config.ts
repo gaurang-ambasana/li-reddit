@@ -8,6 +8,7 @@ export default {
     path: path.join(__dirname, "./migrations"),
     pattern: /^[\w-]+\d+\.[tj]s$/,
   },
+  allowGlobalContext: true,
   entities: [Post],
   dbName: "lireddit",
   user: "postgres",
