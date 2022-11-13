@@ -26,7 +26,7 @@ const main = async () => {
 
   apolloServer.applyMiddleware({ app });
 
-  app.get("/", (req, res) => res.status(200).send("API is running..."));
+  app.get("/", (_, res) => res.status(200).send("API is running..."));
 
   app.listen(PORT, () =>
     console.log(`Server up and running at ${PORT} and http://localhost:4000`)
