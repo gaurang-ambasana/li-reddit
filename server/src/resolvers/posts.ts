@@ -22,9 +22,37 @@ export class PostResolver {
   async createPost(
     @Arg("title", () => String) title: string,
     @Ctx() { em }: MyContext
-  ): Promise<Post | null> {
+  ): Promise<Post> {
     const post = em.create(Post, { title } as RequiredEntityData<Post>);
     await em.persistAndFlush(post);
     return post;
+  }
+
+  @Mutation(() => Post)
+  async updatePost(
+    @Arg("id", () => Int) id: number,
+    @Arg("title", () => String, { nullable: true }) title: string,
+    @Ctx() { em }: MyContext
+  ): Promise<Post | null> {
+    const post = await em.findOne(Post, { id });
+
+    if (post === null) return null;
+
+    if (typeof title !== "undefined") {
+      post.title = title;
+      await em.persistAndFlush(post);
+    }
+
+    return post;
+  }
+
+  @Mutation(() => Boolean)
+  async deletePost(@Arg("id", () => Int) id: number, @Ctx() { em }: MyContext) {
+    try {
+      await em.nativeDelete(Post, { id });
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
