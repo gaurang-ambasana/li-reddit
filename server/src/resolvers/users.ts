@@ -13,19 +13,56 @@ export class UserResolver {
     return em.find(User, {});
   }
 
-  @Mutation(() => User)
+  @Mutation(() => UserResponse)
   async register(
     @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput,
     @Ctx() { em }: MyContext
-  ): Promise<User> {
+  ): Promise<UserResponse> {
     const { username, password: plainPassword } = options;
+
+    if (!username || username.length < 3)
+      return {
+        errors: [
+          {
+            field: "username",
+            message: "username should be atleast 3 characters",
+          },
+        ],
+      };
+
+    if (!plainPassword || plainPassword.length < 5)
+      return {
+        errors: [
+          {
+            field: "password",
+            message: "password should be atleast 5 characters",
+          },
+        ],
+      };
+
     const hashedPassword = await argon2.hash(plainPassword);
+
     const user = em.create(User, {
       username,
       password: hashedPassword,
     } as RequiredEntityData<User>);
-    await em.persistAndFlush(user);
-    return user;
+
+    try {
+      await em.persistAndFlush(user);
+    } catch ({ code, detail, message }) {
+      if (code === "23505" || detail.includes("already exists"))
+        return {
+          errors: [
+            {
+              field: "username",
+              message: `${username} is already taken`,
+            },
+          ],
+        };
+    }
+    return {
+      user,
+    };
   }
 
   @Mutation(() => UserResponse)
@@ -37,7 +74,7 @@ export class UserResolver {
 
     const user = await em.findOne(User, { username });
 
-    if (!user) {
+    if (!user)
       return {
         errors: [
           {
@@ -46,11 +83,10 @@ export class UserResolver {
           },
         ],
       };
-    }
 
     const valid = await argon2.verify(user.password, plainPassword);
 
-    if (!valid) {
+    if (!valid)
       return {
         errors: [
           {
@@ -59,7 +95,6 @@ export class UserResolver {
           },
         ],
       };
-    }
 
     return {
       user,
