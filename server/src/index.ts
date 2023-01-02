@@ -56,7 +56,7 @@ const main = async () => {
   app.get("/", (_, res) => res.status(200).send("API is running..."));
 
   app.listen(PORT, () =>
-    console.log(`Server up and running at ${PORT} and http://localhost:4000`)
+    console.log(`Server up and running at ${PORT} and http://localhost:${PORT}`)
   );
 };
 
